@@ -10,6 +10,7 @@ import Trends from './components/Trends';
 
 function App() {
   const [activeTab, setActiveTab] = useState('Overview');
+  const [market, setMarket] = useState('Brazil');
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -18,19 +19,22 @@ function App() {
 
   useEffect(() => {
     async function loadData() {
-      const result = await fetchData();
+      setLoading(true);
+      setData(null);
+      setAnalysisText(null);
+      
+      const result = await fetchData(market);
       if (result) {
         setData(result);
-        // Pre-fetch AI analysis once per session
         setAiLoading(true);
-        const res = await generateAIAnalysis();
+        const res = await generateAIAnalysis(market);
         setAnalysisText(res);
         setAiLoading(false);
       }
       setLoading(false);
     }
     loadData();
-  }, []);
+  }, [market]);
 
   const tabs = [
     { name: 'Overview', icon: LayoutDashboard },
@@ -41,11 +45,24 @@ function App() {
   return (
     <div className="app-container">
       <main className="content-area">
-        <h1>{activeTab}</h1>
+        <header className="main-header">
+          <h1>{activeTab}</h1>
+          <div className="market-switcher">
+            {['Brazil', 'India'].map(m => (
+              <button 
+                key={m}
+                className={`market-btn ${market === m ? 'active' : ''}`}
+                onClick={() => setMarket(m)}
+              >
+                {m}
+              </button>
+            ))}
+          </div>
+        </header>
         
         <AnimatePresence mode="wait">
           <motion.div
-            key={activeTab}
+            key={activeTab + market}
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
@@ -62,7 +79,13 @@ function App() {
                 aiLoading={aiLoading} 
               />
             )}
-            {activeTab === 'Trends' && <Trends data={data?.monthlyTrend} loading={loading} />}
+            {activeTab === 'Trends' && (
+              <Trends 
+                data={data?.monthlyTrend} 
+                loading={loading} 
+                lookerUrl={data?.lookerUrl}
+              />
+            )}
           </motion.div>
         </AnimatePresence>
       </main>

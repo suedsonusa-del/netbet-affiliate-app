@@ -1,35 +1,44 @@
-const API_URL = "https://script.google.com/macros/s/AKfycbxCmQoImm_VobivkedNiwhRnidUE-ydAGWcim8xs7yDE1GC-Wb_djYNjByXbVzPfHw3sg/exec";
+const MARKETS = {
+  Brazil: {
+    apiUrl: import.meta.env.VITE_BRAZIL_API_URL,
+    lookerUrl: "https://lookerstudio.google.com/u/0/reporting/31668882-7711-4777-8322-632ad8177497/page/rprtF"
+  },
+  India: {
+    apiUrl: import.meta.env.VITE_INDIA_API_URL,
+    lookerUrl: "https://lookerstudio.google.com/u/2/reporting/25f3731d-3561-49e9-a577-3f65c70ee897/page/rprtF"
+  }
+};
 
-export const fetchData = async () => {
+export const fetchData = async (market = 'Brazil') => {
+  const url = MARKETS[market]?.apiUrl;
+  if (!url) return null;
+
   try {
-    const response = await fetch(API_URL);
+    const response = await fetch(url);
     if (!response.ok) throw new Error("Network response was not ok");
     const data = await response.json();
-    return data;
+    return { ...data, lookerUrl: MARKETS[market].lookerUrl };
   } catch (error) {
-    console.error("Error fetching data:", error);
+    console.error(`Error fetching ${market} data:`, error);
     return null;
   }
 };
 
-export const generateAIAnalysis = async () => {
+export const generateAIAnalysis = async (market = 'Brazil') => {
+  const url = MARKETS[market]?.apiUrl;
+  if (!url) return null;
+
   try {
-    // Calling the proxied endpoint to avoid CORS issues
-    // Added redirect: 'follow' and mode: 'cors' for GAS compatibility
-    const response = await fetch(`${API_URL}?action=analysis`, {
+    const response = await fetch(`${url}?action=analysis`, {
       method: 'GET',
       mode: 'cors',
       redirect: 'follow'
     });
     
-    console.log("AI Analysis Raw Response:", response);
-    
     if (!response.ok) throw new Error(`AI Fetch failed via proxy (Status: ${response.status})`);
     
     const data = await response.json();
-    console.log("AI Analysis JSON Data:", data);
     
-    // Extract the analysis string and split into bullet points
     let points = [];
     if (data && typeof data.analysis === 'string') {
       points = data.analysis.split('\n')
@@ -41,9 +50,9 @@ export const generateAIAnalysis = async () => {
       points = data.slice(0, 4);
     }
 
-    return points.length > 0 ? points : ["No intelligence report available at this time."];
+    return points.length > 0 ? points : ["No intelligence report available for this market."];
   } catch (error) {
-    console.error("AI Analysis Error (via proxy):", error);
+    console.error(`AI Analysis Error (${market}):`, error);
     return ["Failed to generate intelligence report through the proxy."];
   }
 };
