@@ -114,35 +114,37 @@ h1 {
 }
 
 .period-selector {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: 8px;
-  overflow-x: auto;
-  padding-bottom: 8px;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-}
-
-.period-selector::-webkit-scrollbar {
-  display: none;
+  margin-bottom: 8px;
 }
 
 .period-btn {
   background: var(--card-bg);
   border: 1px solid var(--card-border);
   color: var(--text-secondary);
-  padding: 8px 16px;
-  border-radius: 100px;
-  font-size: 13px;
-  white-space: nowrap;
+  padding: 10px 4px;
+  border-radius: 12px;
+  font-size: 11px;
+  text-align: center;
   transition: all 0.2s ease;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+}
+
+.period-btn:last-child {
+  grid-column: span 2; /* "Year to date" spans 2 columns to fill the row */
 }
 
 .period-btn.active {
   background: var(--color-green);
   border-color: var(--color-green);
   color: #000;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .date-range-label {
