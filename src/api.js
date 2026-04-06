@@ -87,7 +87,7 @@ export const generateAIAnalysis = async (market = 'Brazil', period = 'Last Month
       redirect: 'follow'
     });
     
-    if (!response.ok) throw new Error(`AI Fetch failed via proxy (Status: ${response.status})`);
+    if (!response.ok) throw new Error(`AI Fetch failed (Status: ${response.status})`);
     
     const data = await response.json();
     
@@ -102,9 +102,9 @@ export const generateAIAnalysis = async (market = 'Brazil', period = 'Last Month
       points = data.slice(0, 4);
     }
 
-    return points.length > 0 ? points : ["No intelligence report available for this market."];
+    return points.length > 0 ? points : ["No intelligence report available for this market yet."];
   } catch (error) {
     console.error(`AI Analysis Error (${market}):`, error);
-    return ["Failed to generate intelligence report through the proxy."];
+    return ["Currently unable to generate intelligence report for this market."];
   }
 };
