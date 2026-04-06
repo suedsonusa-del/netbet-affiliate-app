@@ -47,7 +47,8 @@ export const fetchData = async (market = 'Brazil', period = 'Last 30 days') => {
   if (!url) return null;
 
   const { start, end } = getPeriodDates(period);
-  const fullUrl = `${url}?startDate=${start}&endDate=${end}`;
+  // Add timestamp to prevent browser caching of Google redirects
+  const fullUrl = `${url}?startDate=${start}&endDate=${end}&_t=${Date.now()}`;
 
   try {
     const response = await fetch(fullUrl, {
@@ -64,12 +65,15 @@ export const fetchData = async (market = 'Brazil', period = 'Last 30 days') => {
   }
 };
 
-export const generateAIAnalysis = async (market = 'Brazil') => {
+export const generateAIAnalysis = async (market = 'Brazil', period = 'Last 30 days') => {
   const url = MARKETS[market]?.apiUrl;
   if (!url) return null;
 
+  const { start, end } = getPeriodDates(period);
+  const fullUrl = `${url}?action=analysis&startDate=${start}&endDate=${end}&_t=${Date.now()}`;
+
   try {
-    const response = await fetch(`${url}?action=analysis`, {
+    const response = await fetch(fullUrl, {
       method: 'GET',
       mode: 'cors',
       redirect: 'follow'
