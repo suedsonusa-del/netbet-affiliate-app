@@ -108,6 +108,54 @@ h1 {
   margin-bottom: 16px;
 }
 
+/* Period Selector */
+.period-container {
+  margin-bottom: 24px;
+}
+
+.period-selector {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.period-selector::-webkit-scrollbar {
+  display: none;
+}
+
+.period-btn {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  color: var(--text-secondary);
+  padding: 8px 16px;
+  border-radius: 100px;
+  font-size: 13px;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.period-btn.active {
+  background: var(--color-green);
+  border-color: var(--color-green);
+  color: #000;
+  font-weight: 600;
+}
+
+.date-range-label {
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.date-range-label span {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
 /* Grid Layouts */
 .stats-grid {
   display: grid;

@@ -11,6 +11,7 @@ import Trends from './components/Trends';
 function App() {
   const [activeTab, setActiveTab] = useState('Overview');
   const [market, setMarket] = useState('Brazil');
+  const [period, setPeriod] = useState('Last 30 days');
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -23,18 +24,18 @@ function App() {
       setData(null);
       setAnalysisText(null);
       
-      const result = await fetchData(market);
+      const result = await fetchData(market, period);
       if (result) {
         setData(result);
         setAiLoading(true);
-        const res = await generateAIAnalysis(market);
+        const res = await generateAIAnalysis(market, period);
         setAnalysisText(res);
         setAiLoading(false);
       }
       setLoading(false);
     }
     loadData();
-  }, [market]);
+  }, [market, period]);
 
   const tabs = [
     { name: 'Overview', icon: LayoutDashboard },
@@ -69,7 +70,12 @@ function App() {
             transition={{ duration: 0.2 }}
           >
             {activeTab === 'Overview' && (
-              <Overview data={data?.totals} loading={loading} />
+              <Overview 
+                data={data?.totals} 
+                loading={loading} 
+                period={period} 
+                onPeriodChange={setPeriod} 
+              />
             )}
             {activeTab === 'Operators' && (
               <Operators 

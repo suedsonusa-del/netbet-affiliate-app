@@ -9,12 +9,48 @@ const MARKETS = {
   }
 };
 
-export const fetchData = async (market = 'Brazil') => {
+export const getPeriodDates = (period) => {
+  const end = new Date();
+  const start = new Date();
+  
+  switch (period) {
+    case 'Last 7 days':
+      start.setDate(end.getDate() - 7);
+      break;
+    case 'Last 90 days':
+      start.setDate(end.getDate() - 90);
+      break;
+    case 'Month to date':
+      start.setDate(1);
+      break;
+    case 'Year to date':
+      start.setMonth(0, 1);
+      break;
+    case 'Last 30 days':
+    default:
+      start.setDate(end.getDate() - 30);
+      break;
+  }
+
+  const format = (d) => d.toISOString().split('T')[0];
+  const formatLabel = (d) => d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+
+  return {
+    start: format(start),
+    end: format(end),
+    label: `${formatLabel(start)} – ${formatLabel(end)}`
+  };
+};
+
+export const fetchData = async (market = 'Brazil', period = 'Last 30 days') => {
   const url = MARKETS[market]?.apiUrl;
   if (!url) return null;
 
+  const { start, end } = getPeriodDates(period);
+  const fullUrl = `${url}?startDate=${start}&endDate=${end}`;
+
   try {
-    const response = await fetch(url, {
+    const response = await fetch(fullUrl, {
       method: 'GET',
       mode: 'cors',
       redirect: 'follow'
