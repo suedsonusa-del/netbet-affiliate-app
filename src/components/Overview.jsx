@@ -1,7 +1,7 @@
 import { getPeriodDates } from '../api';
 
 const Overview = ({ data, loading, period, onPeriodChange }) => {
-  const periods = ['Last 7 days', 'Last 30 days', 'Last 90 days', 'Month to date', 'Year to date'];
+  const periods = ['Last 7 days', 'Last Month', 'Last 90 days', 'Month to date', 'Year to date'];
   const { label } = getPeriodDates(period);
 
   if (loading) return (

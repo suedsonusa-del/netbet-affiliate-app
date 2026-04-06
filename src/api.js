@@ -26,6 +26,14 @@ export const getPeriodDates = (period) => {
     case 'Year to date':
       start.setMonth(0, 1);
       break;
+    case 'Last Month':
+      // Move to 1st of current month, then subtract 1 day to get last day of previous month
+      end.setDate(0); 
+      start.setDate(1); // Still previous month because end is now in previous month
+      start.setMonth(end.getMonth());
+      start.setFullYear(end.getFullYear());
+      start.setDate(1);
+      break;
     case 'Last 30 days':
     default:
       start.setDate(end.getDate() - 30);
@@ -42,7 +50,7 @@ export const getPeriodDates = (period) => {
   };
 };
 
-export const fetchData = async (market = 'Brazil', period = 'Last 30 days') => {
+export const fetchData = async (market = 'Brazil', period = 'Last Month') => {
   const url = MARKETS[market]?.apiUrl;
   if (!url) return null;
 
@@ -65,7 +73,7 @@ export const fetchData = async (market = 'Brazil', period = 'Last 30 days') => {
   }
 };
 
-export const generateAIAnalysis = async (market = 'Brazil', period = 'Last 30 days') => {
+export const generateAIAnalysis = async (market = 'Brazil', period = 'Last Month') => {
   const url = MARKETS[market]?.apiUrl;
   if (!url) return null;
 

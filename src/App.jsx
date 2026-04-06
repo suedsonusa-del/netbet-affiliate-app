@@ -11,7 +11,7 @@ import Trends from './components/Trends';
 function App() {
   const [activeTab, setActiveTab] = useState('Overview');
   const [market, setMarket] = useState('Brazil');
-  const [period, setPeriod] = useState('Last 30 days');
+  const [period, setPeriod] = useState('Last Month');
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
