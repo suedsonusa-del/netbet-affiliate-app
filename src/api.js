@@ -14,7 +14,11 @@ export const fetchData = async (market = 'Brazil') => {
   if (!url) return null;
 
   try {
-    const response = await fetch(url);
+    const response = await fetch(url, {
+      method: 'GET',
+      mode: 'cors',
+      redirect: 'follow'
+    });
     if (!response.ok) throw new Error("Network response was not ok");
     const data = await response.json();
     return { ...data, lookerUrl: MARKETS[market].lookerUrl };
