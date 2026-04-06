@@ -78,7 +78,7 @@ export const generateAIAnalysis = async (market = 'Brazil', period = 'Last Month
   if (!url) return null;
 
   const { start, end } = getPeriodDates(period);
-  const fullUrl = `${url}?action=analysis&startDate=${start}&endDate=${end}&_t=${Date.now()}`;
+  const fullUrl = `${url}?action=analysis&_t=${Date.now()}`;
 
   try {
     const response = await fetch(fullUrl, {
