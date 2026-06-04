@@ -698,9 +698,21 @@ h1 {
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+.monthly-rows-table th,
 .monthly-rows-table td {
   padding: 6px 4px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  min-width: 90px;
+}
+
+.monthly-rows-table th:first-child,
+.monthly-rows-table td:first-child {
+  min-width: 120px;
+}
+
+.monthly-rows-table th:last-child,
+.monthly-rows-table td:last-child {
+  min-width: 40px;
 }
 
 .monthly-rows-table input,
