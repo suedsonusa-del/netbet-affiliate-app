@@ -66,7 +66,7 @@ const INITIAL_ACTIONS = [
 ];
 
 // Helper to generate Outlook-compatible HTML
-const generateHtmlEmail = (markets, actions) => {
+const generateHtmlEmail = (markets, actions, columns) => {
   return `
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -134,8 +134,9 @@ const generateHtmlEmail = (markets, actions) => {
                     <thead>
                       <tr style="background-color: #f8fafc; border-bottom: 1px solid #e2e8f0;">
                         <th align="left" style="padding: 10px 14px; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif; border: 1px solid #e2e8f0;">Month</th>
-                        <th align="right" style="padding: 10px 14px; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif; border: 1px solid #e2e8f0;">Commission</th>
-                        <th align="right" style="padding: 10px 14px; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif; border: 1px solid #e2e8f0;">Net Revenue</th>
+                        ${columns.map(col => `
+                          <th align="right" style="padding: 10px 14px; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif; border: 1px solid #e2e8f0;">${col.name}</th>
+                        `).join('')}
                         <th align="center" style="padding: 10px 14px; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif; border: 1px solid #e2e8f0;">Status</th>
                       </tr>
                     </thead>
@@ -143,8 +144,14 @@ const generateHtmlEmail = (markets, actions) => {
                       ${m.months.map((row, idx) => `
                         <tr style="background-color: ${idx % 2 === 0 ? '#ffffff' : '#f8fafc'}; border-bottom: 1px solid #f1f5f9;">
                           <td style="padding: 10px 14px; font-size: 13px; color: #334155; font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif; border: 1px solid #e2e8f0;">${row.month}</td>
-                          <td align="right" style="padding: 10px 14px; font-size: 13px; font-weight: 600; color: #059669; font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif; border: 1px solid #e2e8f0;">${row.commission}</td>
-                          <td align="right" style="padding: 10px 14px; font-size: 13px; color: #475569; font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif; border: 1px solid #e2e8f0;">${row.net}</td>
+                          ${columns.map(col => {
+                            const val = row[col.id] || '€0';
+                            const isCommission = col.id === 'commission';
+                            const colorStyle = isCommission ? 'color: #059669; font-weight: 600;' : 'color: #475569;';
+                            return `
+                              <td align="right" style="padding: 10px 14px; font-size: 13px; ${colorStyle} font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif; border: 1px solid #e2e8f0;">${val}</td>
+                            `;
+                          }).join('')}
                           <td align="center" style="padding: 10px 14px; font-size: 12px; font-weight: 600; font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif; border: 1px solid #e2e8f0;">
                             ${row.paid === 'Paid' ? `
                               <span style="color: #059669;">Paid</span>
@@ -213,7 +220,7 @@ const generateHtmlEmail = (markets, actions) => {
 };
 
 // Helper to generate Plain-text fallback
-const generatePlaintextEmail = (markets, actions) => {
+const generatePlaintextEmail = (markets, actions, columns) => {
   const dateStr = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
   let text = `==================================================\n`;
   text += `AFFILIATE MARKETS REPORT - ${dateStr.toUpperCase()}\n`;
@@ -230,7 +237,8 @@ const generatePlaintextEmail = (markets, actions) => {
     
     if (m.months && m.months.length > 0) {
       m.months.forEach(row => {
-        text += `- ${row.month}: Commission: ${row.commission} | Net Rev: ${row.net} | Status: ${row.paid}\n`;
+        const metricsStr = columns.map(col => `${col.name}: ${row[col.id] || '0'}`).join(' | ');
+        text += `- ${row.month}: ${metricsStr} | Status: ${row.paid}\n`;
       });
     } else {
       text += `No performance data logged yet.\n`;
@@ -265,6 +273,14 @@ export default function ReportBuilder() {
     return stored ? JSON.parse(stored) : INITIAL_ACTIONS;
   });
 
+  const [columns, setColumns] = useState(() => {
+    const stored = localStorage.getItem('netbet_report_columns');
+    return stored ? JSON.parse(stored) : [
+      { id: 'commission', name: 'Commission' },
+      { id: 'net', name: 'Net Revenue' }
+    ];
+  });
+
   const [activeMarketId, setActiveMarketId] = useState(() => {
     return markets.length > 0 ? markets[0].id : '';
   });
@@ -280,6 +296,10 @@ export default function ReportBuilder() {
     localStorage.setItem('netbet_report_actions', JSON.stringify(actions));
   }, [actions]);
 
+  useEffect(() => {
+    localStorage.setItem('netbet_report_columns', JSON.stringify(columns));
+  }, [columns]);
+
   const activeMarket = markets.find(m => m.id === activeMarketId) || null;
 
   const handleBackToDashboard = () => {
@@ -291,6 +311,10 @@ export default function ReportBuilder() {
     if (window.confirm("Are you sure you want to reset all report data to the default settings? This will overwrite your current changes.")) {
       setMarkets(INITIAL_MARKETS);
       setActions(INITIAL_ACTIONS);
+      setColumns([
+        { id: 'commission', name: 'Commission' },
+        { id: 'net', name: 'Net Revenue' }
+      ]);
       if (INITIAL_MARKETS.length > 0) {
         setActiveMarketId(INITIAL_MARKETS[0].id);
       }
@@ -309,7 +333,10 @@ export default function ReportBuilder() {
   const addMonthlyRow = (e) => {
     if (e) e.preventDefault();
     if (!activeMarket) return;
-    const newRow = { month: 'New Month', commission: '€0', net: '€0', paid: 'Pending' };
+    const newRow = { month: 'New Month', paid: 'Pending' };
+    columns.forEach(col => {
+      newRow[col.id] = '0';
+    });
     setMarkets(prev => prev.map(m => {
       if (m.id === activeMarketId) {
         return { ...m, months: [...(m.months || []), newRow] };
@@ -341,6 +368,40 @@ export default function ReportBuilder() {
       }
       return m;
     }));
+  };
+
+  const addColumn = (e) => {
+    if (e) e.preventDefault();
+    const colName = window.prompt("Enter new column name:", "New Metric");
+    if (!colName || !colName.trim()) return;
+    const colId = 'col_' + Date.now();
+    setColumns(prev => [...prev, { id: colId, name: colName.trim() }]);
+    
+    setMarkets(prev => prev.map(m => {
+      const updatedMonths = (m.months || []).map(row => ({
+        ...row,
+        [colId]: '0'
+      }));
+      return { ...m, months: updatedMonths };
+    }));
+  };
+
+  const deleteColumn = (colId) => {
+    if (window.confirm("Are you sure you want to delete this column? All data inside this column will be lost.")) {
+      setColumns(prev => prev.filter(c => c.id !== colId));
+      setMarkets(prev => prev.map(m => {
+        const updatedMonths = (m.months || []).map(row => {
+          const newRow = { ...row };
+          delete newRow[colId];
+          return newRow;
+        });
+        return { ...m, months: updatedMonths };
+      }));
+    }
+  };
+
+  const renameColumn = (colId, newName) => {
+    setColumns(prev => prev.map(c => c.id === colId ? { ...c, name: newName } : c));
   };
 
   const addMarket = () => {
@@ -383,8 +444,8 @@ export default function ReportBuilder() {
   };
 
   const handleExport = () => {
-    const htmlContent = generateHtmlEmail(markets, actions);
-    const textContent = generatePlaintextEmail(markets, actions);
+    const htmlContent = generateHtmlEmail(markets, actions, columns);
+    const textContent = generatePlaintextEmail(markets, actions, columns);
 
     const exportWindow = window.open('', '_blank');
     if (!exportWindow) {
@@ -584,7 +645,7 @@ export default function ReportBuilder() {
     exportWindow.document.close();
   };
 
-  const htmlPreviewDoc = generateHtmlEmail(markets, actions);
+  const htmlPreviewDoc = generateHtmlEmail(markets, actions, columns);
 
   return (
     <div className="report-app-container">
@@ -700,10 +761,16 @@ export default function ReportBuilder() {
               {/* Monthly Rows */}
               <div className="subsection-header">
                 <h3>Monthly Data Rows</h3>
-                <button type="button" className="add-row-btn" onClick={addMonthlyRow}>
-                  <Plus size={14} />
-                  <span>Add Row</span>
-                </button>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button type="button" className="add-row-btn" onClick={addColumn} style={{ backgroundColor: 'rgba(0, 162, 255, 0.15)', color: '#00a2ff', borderColor: 'rgba(0, 162, 255, 0.25)' }}>
+                    <Plus size={14} />
+                    <span>Add Column</span>
+                  </button>
+                  <button type="button" className="add-row-btn" onClick={addMonthlyRow}>
+                    <Plus size={14} />
+                    <span>Add Row</span>
+                  </button>
+                </div>
               </div>
 
               <div className="monthly-rows-table-wrapper">
@@ -711,8 +778,47 @@ export default function ReportBuilder() {
                   <thead>
                     <tr>
                       <th>Month</th>
-                      <th>Commission</th>
-                      <th>Net Revenue</th>
+                      {columns.map(col => (
+                        <th key={col.id} style={{ position: 'relative' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <input 
+                              type="text" 
+                              value={col.name} 
+                              onChange={e => renameColumn(col.id, e.target.value)}
+                              style={{ 
+                                background: 'transparent', 
+                                border: 'none', 
+                                borderBottom: '1px dashed rgba(255,255,255,0.2)',
+                                color: 'var(--text-secondary)',
+                                padding: '2px 4px',
+                                fontSize: '11px',
+                                fontWeight: '500',
+                                textTransform: 'uppercase',
+                                width: '80px',
+                                outline: 'none'
+                              }}
+                            />
+                            {columns.length > 1 && (
+                              <button 
+                                type="button" 
+                                onClick={() => deleteColumn(col.id)}
+                                style={{
+                                  background: 'transparent',
+                                  border: 'none',
+                                  color: 'rgba(255,255,255,0.3)',
+                                  cursor: 'pointer',
+                                  padding: '2px',
+                                  display: 'flex',
+                                  alignItems: 'center'
+                                }}
+                                title="Delete Column"
+                              >
+                                <Trash2 size={10} />
+                              </button>
+                            )}
+                          </div>
+                        </th>
+                      ))}
                       <th>Paid Status</th>
                       <th width="40"></th>
                     </tr>
@@ -728,22 +834,16 @@ export default function ReportBuilder() {
                             placeholder="e.g. May 2026"
                           />
                         </td>
-                        <td>
-                          <input 
-                            type="text" 
-                            value={row.commission} 
-                            onChange={e => updateMonthlyRowField(idx, 'commission', e.target.value)}
-                            placeholder="e.g. €14,850"
-                          />
-                        </td>
-                        <td>
-                          <input 
-                            type="text" 
-                            value={row.net} 
-                            onChange={e => updateMonthlyRowField(idx, 'net', e.target.value)}
-                            placeholder="e.g. €37,125"
-                          />
-                        </td>
+                        {columns.map(col => (
+                          <td key={col.id}>
+                            <input 
+                              type="text" 
+                              value={row[col.id] || ''} 
+                              onChange={e => updateMonthlyRowField(idx, col.id, e.target.value)}
+                              placeholder="0"
+                            />
+                          </td>
+                        ))}
                         <td>
                           <select 
                             value={row.paid} 
@@ -756,6 +856,7 @@ export default function ReportBuilder() {
                         </td>
                         <td align="center">
                           <button 
+                            type="button"
                             className="delete-row-btn" 
                             onClick={() => deleteMonthlyRow(idx)}
                             title="Delete Row"
@@ -767,7 +868,7 @@ export default function ReportBuilder() {
                     ))}
                     {(!activeMarket.months || activeMarket.months.length === 0) && (
                       <tr>
-                        <td colSpan="5" className="empty-table-msg">
+                        <td colSpan={columns.length + 3} className="empty-table-msg">
                           No monthly data. Click "Add Row" to populate performance.
                         </td>
                       </tr>
