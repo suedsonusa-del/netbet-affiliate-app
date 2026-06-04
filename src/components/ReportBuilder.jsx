@@ -495,7 +495,7 @@ export default function ReportBuilder() {
             </div>
             
             <div class="button-bar">
-              <button class="btn" onclick="selectElementContents(document.getElementById('email-preview'))">Select Styled Report</button>
+              <button class="btn" id="copy-btn" onclick="selectAndCopyReport()">Select Styled Report</button>
               <button class="btn btn-secondary" onclick="window.close()">Close</button>
             </div>
 
@@ -531,6 +531,48 @@ export default function ReportBuilder() {
                 range = body.createTextRange();
                 range.moveToElementText(el);
                 range.select();
+              }
+            }
+
+            async function selectAndCopyReport() {
+              var el = document.getElementById('email-preview');
+              selectElementContents(el);
+              
+              try {
+                var html = el.innerHTML;
+                var text = el.innerText || el.textContent;
+                
+                var clipboardData = [
+                  new ClipboardItem({
+                    "text/html": new Blob([html], { type: "text/html" }),
+                    "text/plain": new Blob([text], { type: "text/plain" })
+                  })
+                ];
+                await navigator.clipboard.write(clipboardData);
+                
+                var btn = document.getElementById('copy-btn');
+                var originalText = btn.innerText;
+                btn.innerText = "Copied to Clipboard!";
+                btn.style.backgroundColor = "#059669";
+                setTimeout(function() {
+                  btn.innerText = originalText;
+                  btn.style.backgroundColor = "#10b981";
+                }, 2000);
+              } catch (err) {
+                console.error("Modern clipboard write failed, trying legacy execCommand:", err);
+                try {
+                  document.execCommand('copy');
+                  var btn = document.getElementById('copy-btn');
+                  var originalText = btn.innerText;
+                  btn.innerText = "Selected & Copied!";
+                  btn.style.backgroundColor = "#059669";
+                  setTimeout(function() {
+                    btn.innerText = originalText;
+                    btn.style.backgroundColor = "#10b981";
+                  }, 2000);
+                } catch (copyErr) {
+                  alert("Report is highlighted. Press Cmd+C or Ctrl+C to copy!");
+                }
               }
             }
           </script>
