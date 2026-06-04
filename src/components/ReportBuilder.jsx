@@ -306,7 +306,8 @@ export default function ReportBuilder() {
     }));
   };
 
-  const addMonthlyRow = () => {
+  const addMonthlyRow = (e) => {
+    if (e) e.preventDefault();
     if (!activeMarket) return;
     const newRow = { month: 'New Month', commission: '€0', net: '€0', paid: 'Pending' };
     setMarkets(prev => prev.map(m => {
@@ -320,7 +321,8 @@ export default function ReportBuilder() {
   const updateMonthlyRowField = (rowIndex, field, value) => {
     setMarkets(prev => prev.map(m => {
       if (m.id === activeMarketId) {
-        const updatedMonths = m.months.map((row, idx) => {
+        const currentMonths = m.months || [];
+        const updatedMonths = currentMonths.map((row, idx) => {
           if (idx === rowIndex) {
             return { ...row, [field]: value };
           }
@@ -335,7 +337,7 @@ export default function ReportBuilder() {
   const deleteMonthlyRow = (rowIndex) => {
     setMarkets(prev => prev.map(m => {
       if (m.id === activeMarketId) {
-        return { ...m, months: m.months.filter((_, idx) => idx !== rowIndex) };
+        return { ...m, months: (m.months || []).filter((_, idx) => idx !== rowIndex) };
       }
       return m;
     }));
@@ -698,7 +700,7 @@ export default function ReportBuilder() {
               {/* Monthly Rows */}
               <div className="subsection-header">
                 <h3>Monthly Data Rows</h3>
-                <button className="add-row-btn" onClick={addMonthlyRow}>
+                <button type="button" className="add-row-btn" onClick={addMonthlyRow}>
                   <Plus size={14} />
                   <span>Add Row</span>
                 </button>
