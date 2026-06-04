@@ -90,9 +90,6 @@ const generateHtmlEmail = (markets, actions) => {
                     <h1 style="margin: 0; font-size: 22px; font-weight: 700; color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif; letter-spacing: -0.5px;">Affiliate Markets Report</h1>
                     <p style="margin: 4px 0 0 0; font-size: 13px; color: #94a3b8; font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif;">Clearfield.group — Prepared for GIMO / NetBet · Confidential</p>
                   </td>
-                  <td align="right" valign="middle" style="font-size: 10px; font-weight: bold; color: #10b981; font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif; text-transform: uppercase; letter-spacing: 1px;">
-                    CONFIDENTIAL
-                  </td>
                 </tr>
               </table>
             </td>
